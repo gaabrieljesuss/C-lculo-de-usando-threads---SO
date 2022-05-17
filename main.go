@@ -5,30 +5,48 @@ import (
 	"math"
 )
 
+const numeroExec = 5
+var somaPi float64
+var numeroThreads = 1
+var numeroTermosTotal = 1000000
+var valoresPi [numeroExec]float64
 
-var valorPi float64
-var numThreads = 1
-var numTermos = 1000000
 
+func calcularSomaParcial(termoInicio int, numeroTermosParcial int, c chan float64) {
+	var soma float64
 
-func calcularPi(termos int, c chan float64) {
-	var pi float64
+	for n := termoInicio; n < termoInicio + numeroTermosParcial; n++ {
+		soma += math.Pow(-1, float64(n)) / float64(2 * n + 1)
+	}
+	
+	c <- soma
+}
 
-	for n := 0; n < termos; n++ {
-		pi += math.Pow(-1, float64(n)) / float64(2 * n + 1)
+func calcularPi(indice int, canal []chan float64){
+	for _, c := range canal {
+		valoresPi[indice] += <-c
 	}
 
-	pi = pi *  4
-	c <- pi
+	valoresPi[indice] = valoresPi[indice] * 4
 }
 
 func main() {
+	var termoInicio int
+
+	for i := 0; i < numeroExec; i++ {
 		var canal []chan float64
-		for j := 0; j < numThreads; j++ {
+		numeroTermosParcial := numeroTermosTotal/numeroThreads
+		termoInicio = 0
+
+		for j := 0; j < numeroThreads; j++ {
 			canal = append(canal, make(chan float64))
-			go calcularPi(numTermos ,canal[j])
+			go calcularSomaParcial(termoInicio, numeroTermosParcial ,canal[j])
+
+			termoInicio += numeroTermosParcial
 		}
-		
-		valorPi = <- canal[0]
-	fmt.Println("Valor do pi ", valorPi)
+		calcularPi(i, canal)	
+
+	}
+	
+	fmt.Println("Valor do pi:", valoresPi)
 }
