@@ -3,17 +3,16 @@ package main
 import (
 	"fmt"
 	"math"
+	"os"
+	"strconv"
 	"time"
 )
 
 const numeroExec = 5
 
-var numeroThreads = 2
-var numeroTermosTotal = 1000000 * 50
-var valoresPi [numeroExec]float64
+var valoresPi, tempoPorExecucao [numeroExec]float64
 
 var somaTempo float64
-var tempoPorExecucao [numeroExec]time.Duration
 
 func calcularSomaParcial(termoInicio int, numeroTermosParcial int, c chan float64) {
 	var soma float64
@@ -33,8 +32,43 @@ func calcularPi(indice int, canal []chan float64) {
 	valoresPi[indice] = valoresPi[indice] * 4
 }
 
+func calcularDesvioPadrao(mediaTempo float64) float64 {
+	var soma float64
+	var desvioPadrao float64
+
+	for _, tempo := range tempoPorExecucao {
+		dispersao := float64(tempo) - mediaTempo
+		soma += math.Pow(dispersao, 2) / numeroExec
+	}
+
+	desvioPadrao = math.Sqrt(soma)
+	return desvioPadrao
+}
+
+func getNumeroThreads() int {
+	var numeroThreads, erro = strconv.Atoi(os.Getenv("NUMERO_THREADS"))
+
+	if erro != nil {
+		panic("Valor da variável NUMERO_THREADS inválido ou não definido!")
+	}
+
+	return numeroThreads
+}
+
+func getNumeroTermos() int {
+	var numeroTermos, erro = strconv.Atoi(os.Getenv("NUMERO_TERMOS"))
+
+	if erro != nil {
+		panic("Valor da variável NUMERO_TERMOS inválido ou não definido!")
+	}
+
+	return numeroTermos
+}
+
 func main() {
-	inicioTempo := time.Now()
+	var numeroThreads = getNumeroThreads()
+	var numeroTermosTotal = getNumeroTermos()
+
 	var termoInicio int
 
 	for i := 0; i < numeroExec; i++ {
@@ -51,25 +85,17 @@ func main() {
 		}
 		calcularPi(i, canal)
 
-		tempoPorExecucao[i] = time.Since(inicioThread)
-		somaTempo = float64(tempoPorExecucao[i])
+		tempoPorExecucao[i] = time.Since(inicioThread).Seconds()
+		somaTempo += float64(tempoPorExecucao[i])
 	}
-
-	tempoDecorrido := time.Since(inicioTempo)
 
 	mediaTempo := somaTempo / numeroExec
-	var valorDados float64
 
-	for _, tempo := range tempoPorExecucao {
-		valor := float64(tempo) - mediaTempo
-		valorDados += math.Pow(valor, 2) / numeroExec
-	}
+	desvioPadrao := calcularDesvioPadrao(mediaTempo)
 
-	desvioPadrao := math.Sqrt(valorDados)
-
-	fmt.Println("Valor do pi:", valoresPi)
-	fmt.Println("Tempo de execução tota: ", tempoDecorrido)
-	fmt.Println("Tempo de execução por thread: ", tempoDecorrido/numeroExec)
-	fmt.Println("Desvio padrão: ", desvioPadrao)
-	fmt.Println("Tempo de cada execucao: ", tempoPorExecucao)
+	fmt.Println("Número de Threads: ", numeroThreads)
+	fmt.Println("Número de Termos: ", numeroTermosTotal)
+	fmt.Println("Valores de pi:", valoresPi)
+	fmt.Println("Tempo médio de execução: ", mediaTempo)
+	fmt.Println("Desvio padrão entre execuções: ", desvioPadrao)
 }
