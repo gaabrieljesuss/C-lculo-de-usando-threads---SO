@@ -45,13 +45,15 @@ func calcularDesvioPadrao(mediaTempo float64) float64 {
 	return desvioPadrao
 }
 
-func getNumeroThreads() int {
+func loadEnvFile(){
 	erro := godotenv.Load(".env")
 
 	if erro != nil {
 		panic("Não foi possível obter o arquivo .env")
 	}
+}
 
+func getNumeroThreads() int {
 	numeroThreads, erro := strconv.Atoi(os.Getenv("NUMERO_THREADS"))
 	if erro != nil {
 		panic("Valor da variável NUMERO_THREADS inválido ou não definido!")
@@ -71,6 +73,7 @@ func getNumeroTermos() int {
 }
 
 func main() {
+	loadEnvFile()
 	numeroThreads := getNumeroThreads()
 	numeroTermosTotal := getNumeroTermos()
 

@@ -101,3 +101,5 @@ $ go run main.go
  Tempo médio de execução: 9.73416038s
  Desvio padão:  0.17827926522369772
 ```
+
+Ao analisarmos os resultados encontrados é possível perceber que quanto maior o número de threads, menor é o tempo médio de execução, devido ao fato de que o número de termos da série a ser calculada é divido pela quantidade de threads definida, o que, consequentemente, gera um menor tempo de execução. 
