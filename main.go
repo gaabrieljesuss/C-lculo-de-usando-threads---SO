@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/joho/godotenv"
 	"math"
 	"os"
 	"strconv"
@@ -34,20 +35,24 @@ func calcularPi(indice int, canal []chan float64) {
 
 func calcularDesvioPadrao(mediaTempo float64) float64 {
 	var soma float64
-	var desvioPadrao float64
 
 	for _, tempo := range tempoPorExecucao {
 		dispersao := float64(tempo) - mediaTempo
 		soma += math.Pow(dispersao, 2) / numeroExec
 	}
 
-	desvioPadrao = math.Sqrt(soma)
+	desvioPadrao := math.Sqrt(soma)
 	return desvioPadrao
 }
 
 func getNumeroThreads() int {
-	var numeroThreads, erro = strconv.Atoi(os.Getenv("NUMERO_THREADS"))
+	erro := godotenv.Load(".env")
 
+	if erro != nil {
+		panic("Não foi possível obter o arquivo .env")
+	}
+
+	numeroThreads, erro := strconv.Atoi(os.Getenv("NUMERO_THREADS"))
 	if erro != nil {
 		panic("Valor da variável NUMERO_THREADS inválido ou não definido!")
 	}
@@ -56,7 +61,7 @@ func getNumeroThreads() int {
 }
 
 func getNumeroTermos() int {
-	var numeroTermos, erro = strconv.Atoi(os.Getenv("NUMERO_TERMOS"))
+	numeroTermos, erro := strconv.Atoi(os.Getenv("NUMERO_TERMOS"))
 
 	if erro != nil {
 		panic("Valor da variável NUMERO_TERMOS inválido ou não definido!")
@@ -66,8 +71,8 @@ func getNumeroTermos() int {
 }
 
 func main() {
-	var numeroThreads = getNumeroThreads()
-	var numeroTermosTotal = getNumeroTermos()
+	numeroThreads := getNumeroThreads()
+	numeroTermosTotal := getNumeroTermos()
 
 	var termoInicio int
 
